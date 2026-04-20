@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: carshowroom
+  h2:
+    console:
+      enabled: true
+  datasource:
+    url: jdbc:h2:mem:carshowroom
+    driverClassName: org.h2.Driver
