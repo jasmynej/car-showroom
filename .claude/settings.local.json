@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./mvnw compile *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(gh pr create --repo jasmynej/car-showroom --title 'Add JPA entities and repositories for all domain models' --body ' *)",
+      "Bash(brew list *)",
+      "Bash(/opt/homebrew/bin/gh pr create --repo jasmynej/car-showroom --title 'Add JPA entities and repositories for all domain models' --body ' *)",
+      "Bash(git rebase *)",
+      "Bash(./mvnw spring-boot:run)",
+      "Bash(curl -s http://localhost:8080/api/cars)",
+      "Bash(python3 -m json.tool)",
+      "Bash(pkill -f \"spring-boot:run\")",
+      "Bash(./mvnw spring-boot:run -q)",
+      "Bash(curl -s http://localhost:8080/api/users/4)",
+      "Bash(curl -s http://localhost:8080/api/orders)",
+      "Bash(curl -s http://localhost:8080/api/invoices/2)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('Paths:', list\\(d['paths'].keys\\(\\)\\)\\)\")",
+      "Bash(curl -s http://localhost:8080/v3/api-docs)",
+      "Bash(python3 -c ' *)"
+    ]
+  }
+}
