@@ -10,6 +10,8 @@ import com.slingshot.carshowroom.model.Role;
 import com.slingshot.carshowroom.model.User;
 import com.slingshot.carshowroom.repository.CarRepository;
 import com.slingshot.carshowroom.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,6 +21,9 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final CarRepository carRepository;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public UserService(UserRepository userRepository, CarRepository carRepository) {
         this.userRepository = userRepository;
@@ -27,7 +32,7 @@ public class UserService {
 
     public UserResponse getUser(Integer id) {
         User user = findOrThrow(id);
-        List<CarResponse> ownedCars = null;
+        List&lt;CarResponse&gt; ownedCars = null;
         if (user.getRole() == Role.CUSTOMER) {
             ownedCars = carRepository.findByOwnerId(id).stream().map(CarResponse::from).toList();
         }
@@ -41,7 +46,8 @@ public class UserService {
         User user = new User();
         user.setName(request.name());
         user.setEmail(request.email());
-        user.setPassword(request.password());
+        // Hash password before saving
+        user.setPassword(passwordEncoder.encode(request.password()));
         user.setContactInfo(request.contactInfo());
         user.setRole(request.role());
         if (request.role() == Role.MANAGER) user.setDepartment(request.department());
@@ -51,12 +57,13 @@ public class UserService {
 
     public void changePassword(Integer id, PasswordUpdateRequest request) {
         User user = findOrThrow(id);
-        user.setPassword(request.password());
+        // Hash new password before saving
+        user.setPassword(passwordEncoder.encode(request.password()));
         userRepository.save(user);
     }
 
     private User findOrThrow(Integer id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
+                .orElseThrow(() -&gt; new ResourceNotFoundException("User not found: " + id));
     }
 }
