@@ -1,6 +1,7 @@
 package com.slingshot.carshowroom.controller;
 
 import com.slingshot.carshowroom.dto.PasswordUpdateRequest;
+import com.slingshot.carshowroom.dto.UserRegistrationRequest;
 import com.slingshot.carshowroom.dto.UserRequest;
 import com.slingshot.carshowroom.dto.UserResponse;
 import com.slingshot.carshowroom.service.UserService;
@@ -35,15 +36,15 @@ public class UserController {
         return userService.getUser(id);
     }
 
-    @Operation(summary = "Register a new user", description = "Set `department` for MANAGER role; set `designation` for STAFF role.")
+    @Operation(summary = "Register a new user", description = "Set `department` for MANAGER role; set `designation` for STAFF role. Password is BCrypt-hashed before persistence.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "User created"),
             @ApiResponse(responseCode = "400", description = "Validation error"),
             @ApiResponse(responseCode = "409", description = "Email already registered")
     })
     @PostMapping
-    public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(request));
+    public ResponseEntity&lt;UserResponse&gt; createUser(@Valid @RequestBody UserRegistrationRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(userService.registerUser(request));
     }
 
     @Operation(summary = "Change a user's password")
@@ -53,7 +54,7 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "User not found")
     })
     @PutMapping("/{id}/password")
-    public ResponseEntity<Void> changePassword(@Parameter(description = "User ID") @PathVariable Integer id,
+    public ResponseEntity&lt;Void&gt; changePassword(@Parameter(description = "User ID") @PathVariable Integer id,
                                                @Valid @RequestBody PasswordUpdateRequest request) {
         userService.changePassword(id, request);
         return ResponseEntity.noContent().build();
