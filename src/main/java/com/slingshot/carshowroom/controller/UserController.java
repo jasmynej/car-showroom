@@ -14,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @Tag(name = "Users", description = "Customers, staff, and managers")
 @RestController
 @RequestMapping("/api/users")
@@ -42,20 +44,21 @@ public class UserController {
             @ApiResponse(responseCode = "409", description = "Email already registered")
     })
     @PostMapping
-    public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserRequest request) {
+    public ResponseEntity&lt;UserResponse&gt; createUser(@Valid @RequestBody UserRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(request));
     }
 
     @Operation(summary = "Change a user's password")
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Password updated"),
+            @ApiResponse(responseCode = "200", description = "Password updated"),
             @ApiResponse(responseCode = "400", description = "Validation error"),
             @ApiResponse(responseCode = "404", description = "User not found")
     })
     @PutMapping("/{id}/password")
-    public ResponseEntity<Void> changePassword(@Parameter(description = "User ID") @PathVariable Integer id,
-                                               @Valid @RequestBody PasswordUpdateRequest request) {
-        userService.changePassword(id, request);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity&lt;Map&lt;String, String&gt;&gt; changePassword(
+            @Parameter(description = "User ID") @PathVariable Integer id,
+            @Valid @RequestBody PasswordUpdateRequest request) {
+        userService.updatePassword(id, request);
+        return ResponseEntity.ok(Map.of("message", "Password updated successfully"));
     }
 }
