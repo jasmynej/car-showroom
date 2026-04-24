@@ -2,14 +2,18 @@ package com.slingshot.carshowroom.service;
 
 import com.slingshot.carshowroom.dto.CarResponse;
 import com.slingshot.carshowroom.dto.PasswordUpdateRequest;
+import com.slingshot.carshowroom.dto.UserRegistrationRequest;
 import com.slingshot.carshowroom.dto.UserRequest;
 import com.slingshot.carshowroom.dto.UserResponse;
 import com.slingshot.carshowroom.exception.ConflictException;
 import com.slingshot.carshowroom.exception.ResourceNotFoundException;
+import com.slingshot.carshowroom.exception.UserAlreadyExistsException;
+import com.slingshot.carshowroom.exception.UserNotFoundException;
 import com.slingshot.carshowroom.model.Role;
 import com.slingshot.carshowroom.model.User;
 import com.slingshot.carshowroom.repository.CarRepository;
 import com.slingshot.carshowroom.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,15 +23,17 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final CarRepository carRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, CarRepository carRepository) {
+    public UserService(UserRepository userRepository, CarRepository carRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.carRepository = carRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public UserResponse getUser(Integer id) {
         User user = findOrThrow(id);
-        List<CarResponse> ownedCars = null;
+        List&lt;CarResponse&gt; ownedCars = null;
         if (user.getRole() == Role.CUSTOMER) {
             ownedCars = carRepository.findByOwnerId(id).stream().map(CarResponse::from).toList();
         }
@@ -49,14 +55,56 @@ public class UserService {
         return UserResponse.from(userRepository.save(user), null);
     }
 
+    public UserResponse registerUser(UserRegistrationRequest request) {
+        // 1. Check if user already exists
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new UserAlreadyExistsException("Email already registered");
+        }
+
+        // 2. Create new user
+        User user = new User();
+        user.setName(request.getName());
+        user.setEmail(request.getEmail());
+
+        // 3. Hash password
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        // 4. Set role (default to CUSTOMER)
+        Role role = request.getRole() != null &amp;&amp; !request.getRole().isEmpty()
+                ? Role.valueOf(request.getRole())
+                : Role.CUSTOMER;
+        user.setRole(role);
+
+        // 5. Set optional fields
+        user.setContactInfo(request.getContactInfo());
+        if (role == Role.MANAGER) {
+            user.setDepartment(request.getDepartment());
+        }
+        if (role == Role.STAFF) {
+            user.setDesignation(request.getDesignation());
+        }
+
+        // 6. Save and return
+        User savedUser = userRepository.save(user);
+        return UserResponse.from(savedUser, null);
+    }
+
     public void changePassword(Integer id, PasswordUpdateRequest request) {
         User user = findOrThrow(id);
         user.setPassword(request.password());
         userRepository.save(user);
     }
 
+    public void updatePassword(Integer userId, PasswordUpdateRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -&gt; new UserNotFoundException("User not found"));
+
+        user.setPassword(passwordEncoder.encode(request.password()));
+        userRepository.save(user);
+    }
+
     private User findOrThrow(Integer id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
+                .orElseThrow(() -&gt; new ResourceNotFoundException("User not found: " + id));
     }
 }
